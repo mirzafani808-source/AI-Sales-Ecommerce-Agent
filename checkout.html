@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <h1 class="section-title">💳 Checkout</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" class="checkout-grid">
+        <div class="checkout-form">
+            <h3>Shipping Information</h3>
+            <div class="form-row">
+                <label>Full Name *</label>
+                <input type="text" name="name" value="{{ current_user.display_name }}" required>
+            </div>
+            <div class="form-row">
+                <label>Email Address *</label>
+                <input type="email" name="email" value="{{ current_user.email or '' }}" required>
+            </div>
+            <div class="form-row">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" placeholder="+92 300 1234567">
+            </div>
+            <div class="form-row">
+                <label>Delivery Address *</label>
+                <textarea name="address" rows="3" required placeholder="House #, Street, City, Country"></textarea>
+            </div>
+
+            <h3 style="margin-top:24px;">Payment Method</h3>
+            <div class="payment-card">
+                <i class="fas fa-money-bill-wave" style="color:#22c55e;font-size:22px;"></i>
+                <div>
+                    <div style="color:white;font-weight:600;">Cash on Delivery</div>
+                    <div style="color:#888;font-size:13px;">Pay when you receive your order</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="order-summary">
+            <h3>Order Summary</h3>
+            <div class="summary-items">
+                {% for it in items %}
+                <div class="summary-item">
+                    <div class="si-img" style="background-image: url('{{ it.product.image_url }}');"></div>
+                    <div class="si-info">
+                        <div class="si-name">{{ it.product.name }}</div>
+                        <div class="si-qty">Qty: {{ it.qty }}</div>
+                    </div>
+                    <div class="si-price">${{ '%.2f' % it.line_total }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="sum-row"><span>Subtotal</span><span>${{ '%.2f' % subtotal }}</span></div>
+            <div class="sum-row"><span>Delivery fee</span><span>${{ '%.2f' % delivery }}</span></div>
+            <div class="sum-row total"><span>Total</span><span>${{ '%.2f' % total }}</span></div>
+
+            <button type="submit" class="btn-place">
+                <i class="fas fa-check-circle"></i> Place Order
+            </button>
+            <a href="{{ url_for('cart_view') }}" class="btn-back">Back to Cart</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.checkout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+.checkout-form, .order-summary {
+    background: rgba(20,20,40,0.7); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 24px;
+}
+.checkout-form h3, .order-summary h3 { color: white; margin-bottom: 18px; }
+.form-row { margin-bottom: 16px; }
+.form-row label { display: block; color: #ccc; font-size: 13px; margin-bottom: 6px; }
+.form-row input, .form-row textarea {
+    width: 100%; padding: 12px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; color: white; font-size: 14px;
+    font-family: inherit;
+}
+.form-row input:focus, .form-row textarea:focus {
+    outline: none; border-color: #6366f1;
+    background: rgba(99,102,241,0.08);
+}
+.payment-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px; background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.25); border-radius: 12px;
+}
+
+.summary-items { margin-bottom: 18px; max-height: 280px; overflow-y: auto; }
+.summary-item {
+    display: grid; grid-template-columns: 50px 1fr auto;
+    gap: 10px; align-items: center; padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.si-img { width: 50px; height: 50px; border-radius: 8px; background-size: cover; background-position: center; background-color: #1e1e3a; }
+.si-name { color: white; font-size: 13px; font-weight: 600; }
+.si-qty  { color: #aaa; font-size: 12px; }
+.si-price { color: #22c55e; font-weight: 600; font-size: 14px; }
+
+.sum-row {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; color: #ccc;
+}
+.sum-row.total {
+    color: white; font-size: 20px; font-weight: 700;
+    margin-top: 8px; padding-top: 18px;
+    border-top: 2px solid rgba(255,255,255,0.1);
+}
+.btn-place {
+    width: 100%; background: linear-gradient(135deg, #22c55e, #10b981);
+    color: white; border: none; padding: 14px; border-radius: 12px;
+    font-weight: 600; cursor: pointer; margin-top: 20px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 15px; transition: all 0.25s;
+}
+.btn-place:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(34,197,94,0.4); }
+.btn-back {
+    display: block; text-align: center; color: #aaa;
+    text-decoration: none; padding: 12px; margin-top: 10px; font-size: 14px;
+}
+.btn-back:hover { color: white; }
+
+.flash-messages { margin-bottom: 20px; }
+.flash { padding: 11px 14px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; }
+.flash.error   { background: rgba(239,68,68,0.18); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.flash.success { background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+.flash.info    { background: rgba(99,102,241,0.18); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+
+@media (max-width: 768px) {
+    .checkout-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
