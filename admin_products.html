@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Manage Products{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <h1 class="section-title">⚙️ Manage Products</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="admin-grid">
+        <div class="add-form-card">
+            <h3>➕ Add New Product</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    <label>Product Name *</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="row-2">
+                    <div class="form-row">
+                        <label>Selling Price (USD) *</label>
+                        <input type="number" name="price" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-row">
+                        <label>Cost Price (USD)</label>
+                        <input type="number" name="cost_price" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="row-2">
+                    <div class="form-row">
+                        <label>Stock Quantity</label>
+                        <input type="number" name="stock" min="0" value="10">
+                    </div>
+                    <div class="form-row">
+                        <label>Category</label>
+                        <input type="text" name="category" placeholder="laptop, phone, shoes…">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>Description</label>
+                    <textarea name="description" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <label>Upload Image</label>
+                    <input type="file" name="image_file" accept="image/*">
+                </div>
+                <div class="form-row">
+                    <label>…or paste an Image URL</label>
+                    <input type="url" name="image_url" placeholder="https://…">
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus-circle"></i> Add Product
+                </button>
+            </form>
+        </div>
+
+        <div class="products-list-card">
+            <h3>📋 Existing Products ({{ products|length }})</h3>
+            {% if products %}
+                <div class="admin-products">
+                    {% for p in products %}
+                    <div class="admin-row {% if not p.is_active %}inactive{% endif %}">
+                        <div class="ar-img" style="background-image: url('{{ p.image_url }}');"></div>
+                        <div class="ar-info">
+                            <div class="ar-name">{{ p.name }}</div>
+                            <div class="ar-meta">
+                                <span class="ar-cat">{{ (p.category or 'general')|title }}</span>
+                                <span class="ar-stock">Stock: {{ p.stock or 0 }}</span>
+                                {% if p.cost_price and p.cost_price > 0 %}
+                                <span class="ar-margin">{{ '%.0f' % ((p.price - p.cost_price) / p.price * 100) }}% margin</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="ar-price">
+                            ${{ '%.2f' % p.price }}
+                            {% if p.cost_price and p.cost_price > 0 %}
+                            <div style="font-size:11px;color:#888;font-weight:400;">cost ${{ '%.2f' % p.cost_price }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="ar-actions">
+                            <form method="POST" action="{{ url_for('admin_toggle_product', pid=p.id) }}" style="display:inline;">
+                                <button type="submit" class="btn-toggle" title="{{ 'Hide' if p.is_active else 'Show' }}">
+                                    <i class="fas fa-{{ 'eye-slash' if p.is_active else 'eye' }}"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin_delete_product', pid=p.id) }}" style="display:inline;"
+                                  onsubmit="return confirm('Remove this product?');">
+                                <button type="submit" class="btn-delete" title="Remove">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color:#aaa;">No products yet. Add your first one →</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 22px; align-items: start; }
+.add-form-card, .products-list-card {
+    background: rgba(20,20,40,0.7); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 22px;
+}
+.add-form-card h3, .products-list-card h3 { color: white; margin-bottom: 18px; }
+.form-row { margin-bottom: 14px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row label { display: block; color: #ccc; font-size: 13px; margin-bottom: 6px; }
+.form-row input, .form-row textarea {
+    width: 100%; padding: 11px 14px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; color: white; font-size: 14px; font-family: inherit;
+}
+.form-row input:focus, .form-row textarea:focus {
+    outline: none; border-color: #6366f1; background: rgba(99,102,241,0.08);
+}
+.form-row input[type=file] {
+    padding: 10px; color: #ccc;
+}
+.btn-primary {
+    width: 100%; background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white; border: none; padding: 13px; border-radius: 12px;
+    font-weight: 600; cursor: pointer; margin-top: 6px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.25s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(99,102,241,0.4); }
+
+.admin-products { display: flex; flex-direction: column; gap: 10px; }
+.admin-row {
+    display: grid; grid-template-columns: 60px 1fr 90px 90px;
+    gap: 12px; align-items: center;
+    padding: 10px; background: rgba(255,255,255,0.04);
+    border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);
+}
+.admin-row.inactive { opacity: 0.5; }
+.ar-img { width: 60px; height: 60px; border-radius: 8px; background-size: cover; background-position: center; background-color: #1e1e3a; }
+.ar-name { color: white; font-weight: 600; margin-bottom: 4px; }
+.ar-meta { display: flex; gap: 10px; font-size: 12px; color: #aaa; }
+.ar-cat { color: #a855f7; text-transform: uppercase; letter-spacing: 0.5px; }
+.ar-margin { color: #22c55e; }
+.ar-price { color: #22c55e; font-weight: 700; text-align: right; }
+.ar-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.btn-toggle, .btn-delete {
+    width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.btn-toggle { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+.btn-delete { background: rgba(239,68,68,0.15); color: #fca5a5; }
+.btn-delete:hover { background: rgba(239,68,68,0.3); }
+
+.flash-messages { margin-bottom: 20px; }
+.flash { padding: 11px 14px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; }
+.flash.error   { background: rgba(239,68,68,0.18); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.flash.success { background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+.flash.info    { background: rgba(99,102,241,0.18); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+
+@media (max-width: 900px) {
+    .admin-grid { grid-template-columns: 1fr; }
+    .admin-row { grid-template-columns: 50px 1fr 80px; }
+    .ar-actions { grid-column: 1/4; justify-content: flex-end; }
+}
+</style>
+{% endblock %}

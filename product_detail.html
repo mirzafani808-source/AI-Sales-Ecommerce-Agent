@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <a href="{{ url_for('products') }}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to products
+    </a>
+
+    <div class="detail-grid">
+        <div class="detail-image" style="background-image: url('{{ product.image_url }}');"></div>
+        <div class="detail-info">
+            <div class="product-category">{{ (product.category or 'general')|title }}</div>
+            <h1>{{ product.name }}</h1>
+            <div class="detail-price">${{ '%.2f' % product.price }}</div>
+            <p class="detail-desc">{{ product.description }}</p>
+
+            <div class="stock-row">
+                {% if (product.stock or 0) > 0 %}
+                    <span class="stock-badge in"><i class="fas fa-check-circle"></i> {{ product.stock }} in stock</span>
+                {% else %}
+                    <span class="stock-badge out"><i class="fas fa-times-circle"></i> Out of stock</span>
+                {% endif %}
+            </div>
+
+            <form method="POST" action="{{ url_for('cart_add', pid=product.id) }}" class="add-form">
+                <label>Quantity</label>
+                <input type="number" name="qty" value="1" min="1" max="{{ product.stock or 1 }}">
+                <button type="submit" class="btn-primary" {% if (product.stock or 0) <= 0 %}disabled{% endif %}>
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if related %}
+    <h2 class="section-title" style="font-size:22px;margin-top:40px;">You may also like</h2>
+    <div class="related-grid">
+        {% for r in related %}
+        <a href="{{ url_for('product_detail', pid=r.id) }}" class="related-card">
+            <div class="related-img" style="background-image: url('{{ r.image_url }}');"></div>
+            <div class="related-info">
+                <div class="related-name">{{ r.name }}</div>
+                <div class="related-price">${{ '%.2f' % r.price }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.back-link { color: #aaa; text-decoration: none; font-size: 14px; display: inline-block; margin-bottom: 20px; }
+.back-link:hover { color: white; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+.detail-image {
+    width: 100%; padding-top: 75%;
+    background-size: cover; background-position: center;
+    border-radius: 20px; background-color: #1e1e3a;
+}
+.detail-info h1 { color: white; font-size: 28px; margin: 8px 0 14px; }
+.product-category {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+    color: #a855f7; font-weight: 600;
+}
+.detail-price {
+    font-size: 32px; font-weight: 700;
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 18px;
+}
+.detail-desc { color: #ccc; line-height: 1.7; margin-bottom: 22px; }
+.stock-row { margin-bottom: 18px; }
+.stock-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 20px; font-size: 13px;
+}
+.stock-badge.in  { background: rgba(34,197,94,0.18); color: #86efac; }
+.stock-badge.out { background: rgba(239,68,68,0.18); color: #fca5a5; }
+.add-form {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.add-form label { color: #ccc; font-size: 14px; }
+.add-form input[type=number] {
+    width: 80px; padding: 12px; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+    color: white; font-size: 15px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white; border: none; padding: 13px 22px; border-radius: 12px;
+    font-weight: 600; cursor: pointer; display: inline-flex;
+    align-items: center; gap: 8px; transition: all 0.25s;
+}
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(99,102,241,0.4); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.related-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px; margin-top: 18px;
+}
+.related-card {
+    background: rgba(20,20,40,0.7); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; overflow: hidden; text-decoration: none;
+    transition: all 0.3s;
+}
+.related-card:hover { transform: translateY(-3px); border-color: #6366f1; }
+.related-img { padding-top: 65%; background-size: cover; background-position: center; }
+.related-info { padding: 12px; }
+.related-name { color: white; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.related-price { color: #22c55e; font-weight: 700; }
+
+@media (max-width: 768px) {
+    .detail-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}

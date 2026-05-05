@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <h1 class="section-title">🛒 Your Cart</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if items %}
+    <div class="cart-grid">
+        <div class="cart-items">
+            {% for it in items %}
+            <div class="cart-row">
+                <div class="cart-img" style="background-image: url('{{ it.product.image_url }}');"></div>
+                <div class="cart-info">
+                    <div class="cart-name">{{ it.product.name }}</div>
+                    <div class="cart-price">${{ '%.2f' % it.product.price }} each</div>
+                </div>
+                <form method="POST" action="{{ url_for('cart_update', pid=it.product.id) }}" class="qty-form">
+                    <input type="number" name="qty" value="{{ it.qty }}" min="0" max="{{ it.product.stock or 99 }}">
+                    <button type="submit" class="btn-update" title="Update"><i class="fas fa-sync-alt"></i></button>
+                </form>
+                <div class="cart-line-total">${{ '%.2f' % it.line_total }}</div>
+                <form method="POST" action="{{ url_for('cart_remove', pid=it.product.id) }}">
+                    <button type="submit" class="btn-remove" title="Remove">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+
+            <form method="POST" action="{{ url_for('cart_clear') }}" style="margin-top:12px;">
+                <button type="submit" class="btn-clear">
+                    <i class="fas fa-trash-alt"></i> Clear cart
+                </button>
+            </form>
+        </div>
+
+        <div class="cart-summary">
+            <h3>Order Summary</h3>
+            <div class="sum-row"><span>Subtotal</span><span>${{ '%.2f' % subtotal }}</span></div>
+            <div class="sum-row"><span>Delivery fee</span><span>${{ '%.2f' % delivery }}</span></div>
+            <div class="sum-row total"><span>Total</span><span>${{ '%.2f' % total }}</span></div>
+
+            <a href="{{ url_for('checkout') }}" class="btn-checkout">
+                <i class="fas fa-lock"></i> Proceed to Checkout
+            </a>
+            <a href="{{ url_for('products') }}" class="btn-continue">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-shopping-cart" style="font-size:48px;color:#666;margin-bottom:15px;"></i>
+        <h3 style="color:white;margin-bottom:8px;">Your cart is empty</h3>
+        <p style="color:#aaa;margin-bottom:20px;">Browse our products and add items you like.</p>
+        <a href="{{ url_for('products') }}" class="btn-checkout">Browse Products</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.cart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+.cart-items, .cart-summary {
+    background: rgba(20,20,40,0.7); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 20px;
+}
+.cart-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 110px 90px 40px;
+    gap: 14px; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.cart-row:last-of-type { border-bottom: none; }
+.cart-img {
+    width: 80px; height: 80px; border-radius: 10px;
+    background-size: cover; background-position: center;
+    background-color: #1e1e3a;
+}
+.cart-name { color: white; font-weight: 600; margin-bottom: 4px; }
+.cart-price { color: #aaa; font-size: 13px; }
+.qty-form { display: flex; gap: 4px; align-items: center; }
+.qty-form input {
+    width: 60px; padding: 8px; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    color: white; text-align: center;
+}
+.btn-update {
+    background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.3);
+    color: #a5b4fc; width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+}
+.cart-line-total { color: #22c55e; font-weight: 700; text-align: right; }
+.btn-remove {
+    background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+    color: #fca5a5; width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+}
+.btn-remove:hover { background: rgba(239,68,68,0.3); }
+.btn-clear {
+    background: transparent; border: 1px solid rgba(255,255,255,0.15);
+    color: #aaa; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    font-size: 13px;
+}
+
+.cart-summary h3 { color: white; margin-bottom: 18px; }
+.sum-row {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sum-row.total {
+    color: white; font-size: 20px; font-weight: 700;
+    border-bottom: none; margin-top: 6px; padding-top: 18px;
+    border-top: 2px solid rgba(255,255,255,0.1);
+}
+.btn-checkout {
+    display: block; text-align: center;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white; padding: 14px; border-radius: 12px;
+    text-decoration: none; font-weight: 600; margin-top: 20px;
+    transition: all 0.25s;
+}
+.btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(99,102,241,0.4); }
+.btn-continue {
+    display: block; text-align: center;
+    color: #aaa; text-decoration: none; padding: 12px;
+    margin-top: 10px; font-size: 14px;
+}
+.btn-continue:hover { color: white; }
+
+.empty-state { text-align: center; padding: 60px 20px; }
+
+.flash-messages { margin-bottom: 20px; }
+.flash { padding: 11px 14px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; }
+.flash.error   { background: rgba(239,68,68,0.18); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.flash.success { background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+.flash.info    { background: rgba(99,102,241,0.18); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+
+@media (max-width: 768px) {
+    .cart-grid { grid-template-columns: 1fr; }
+    .cart-row { grid-template-columns: 60px 1fr 60px; }
+    .cart-img { width: 60px; height: 60px; }
+    .qty-form, .cart-line-total { grid-column: 1/4; justify-self: end; }
+}
+</style>
+{% endblock %}

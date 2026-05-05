@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}Products{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="products-header">
+        <h1 class="section-title">🛍️ Our Products</h1>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="{{ url_for('admin_products') }}" class="btn-primary">
+                <i class="fas fa-plus"></i> Manage Products
+            </a>
+        {% endif %}
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if categories %}
+    <div class="category-filter">
+        <a href="{{ url_for('products') }}" class="cat-chip {% if not current_category %}active{% endif %}">All</a>
+        {% for cat in categories %}
+            <a href="{{ url_for('products', category=cat) }}" class="cat-chip {% if current_category == cat %}active{% endif %}">
+                {{ cat|title }}
+            </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if products %}
+    <div class="products-grid">
+        {% for p in products %}
+        <div class="product-card">
+            <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-image-link">
+                <div class="product-image" style="background-image: url('{{ p.image_url }}');"></div>
+            </a>
+            <div class="product-body">
+                <div class="product-category">{{ (p.category or 'general')|title }}</div>
+                <h3 class="product-name">
+                    <a href="{{ url_for('product_detail', pid=p.id) }}">{{ p.name }}</a>
+                </h3>
+                <p class="product-desc">{{ (p.description or '')[:80] }}{% if p.description and p.description|length > 80 %}…{% endif %}</p>
+                <div class="product-footer">
+                    <div class="product-price">${{ '%.2f' % p.price }}</div>
+                    <form method="POST" action="{{ url_for('cart_add', pid=p.id) }}">
+                        <button type="submit" class="btn-cart" {% if (p.stock or 0) <= 0 %}disabled{% endif %}>
+                            <i class="fas fa-cart-plus"></i>
+                            {% if (p.stock or 0) <= 0 %}Out of Stock{% else %}Add{% endif %}
+                        </button>
+                    </form>
+                </div>
+                <div class="product-stock">
+                    {% if (p.stock or 0) > 0 %}
+                        <i class="fas fa-check-circle" style="color:#22c55e"></i> {{ p.stock }} in stock
+                    {% else %}
+                        <i class="fas fa-times-circle" style="color:#ef4444"></i> Out of stock
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-box-open" style="font-size:48px;color:#666;margin-bottom:15px;"></i>
+            <p>No products yet. {% if current_user.is_authenticated and current_user.is_admin %}<a href="{{ url_for('admin_products') }}">Add the first one</a>.{% endif %}</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.products-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white; padding: 10px 18px; border-radius: 10px;
+    text-decoration: none; font-weight: 600; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all 0.25s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99,102,241,0.4); }
+
+.category-filter {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+.cat-chip {
+    padding: 8px 16px; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px; color: #ccc; text-decoration: none;
+    font-size: 13px; transition: all 0.2s;
+}
+.cat-chip:hover, .cat-chip.active {
+    background: rgba(99,102,241,0.25); color: white; border-color: #6366f1;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+.product-card {
+    background: rgba(20,20,40,0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 18px; overflow: hidden;
+    transition: all 0.3s;
+    display: flex; flex-direction: column;
+}
+.product-card:hover {
+    transform: translateY(-4px); border-color: #6366f1;
+    box-shadow: 0 15px 35px rgba(99,102,241,0.2);
+}
+.product-image-link { display: block; }
+.product-image {
+    width: 100%; padding-top: 65%;
+    background-size: cover; background-position: center;
+    background-color: #1e1e3a;
+    transition: transform 0.5s;
+}
+.product-card:hover .product-image { transform: scale(1.05); }
+.product-body { padding: 18px; display: flex; flex-direction: column; flex: 1; }
+.product-category {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: #a855f7; font-weight: 600; margin-bottom: 6px;
+}
+.product-name { font-size: 16px; margin-bottom: 8px; }
+.product-name a { color: white; text-decoration: none; }
+.product-name a:hover { color: #a855f7; }
+.product-desc { color: #aaa; font-size: 13px; line-height: 1.5; flex: 1; margin-bottom: 14px; }
+.product-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px; gap: 10px;
+}
+.product-price {
+    font-size: 22px; font-weight: 700;
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.btn-cart {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white; border: none; padding: 9px 14px;
+    border-radius: 10px; cursor: pointer; font-weight: 600;
+    font-size: 13px; display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.25s;
+}
+.btn-cart:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(99,102,241,0.4); }
+.btn-cart:disabled { background: #444; cursor: not-allowed; opacity: 0.6; }
+.product-stock { font-size: 11px; color: #888; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: #888; }
+.flash-messages { margin-bottom: 20px; }
+.flash {
+    padding: 11px 14px; border-radius: 10px; margin-bottom: 8px;
+    font-size: 13px;
+}
+.flash.error   { background: rgba(239,68,68,0.18); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.flash.success { background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+.flash.info    { background: rgba(99,102,241,0.18); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+</style>
+{% endblock %}

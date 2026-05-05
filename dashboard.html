@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Company Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <h1 class="section-title">📊 Company Dashboard</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon">📦</div>
+            <div class="kpi-value">{{ total_orders }}</div>
+            <div class="kpi-label">Total Orders</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-value">${{ '%.2f' % revenue }}</div>
+            <div class="kpi-label">Revenue</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🛍️</div>
+            <div class="kpi-value">{{ total_products }}</div>
+            <div class="kpi-label">Active Products</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">💬</div>
+            <div class="kpi-value">{{ total_chats }}</div>
+            <div class="kpi-label">Chats Handled</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🛡️</div>
+            <div class="kpi-value">{{ avg_fraud }}%</div>
+            <div class="kpi-label">Avg Fraud Score</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">😊</div>
+            <div class="kpi-value">{{ sentiments.get('POSITIVE', 0) }}</div>
+            <div class="kpi-label">Positive Chats</div>
+        </div>
+    </div>
+
+    <div class="feature-card">
+        <h3>📦 Recent Orders</h3>
+        <div class="orders-table">
+            {% if recent_orders %}
+                {% for o in recent_orders %}
+                    {% set status_color = 'gray' %}
+                    {% if o.status == 'Delivered' %}{% set status_color = 'green' %}
+                    {% elif o.status == 'Shipped' %}{% set status_color = 'blue' %}
+                    {% elif o.status == 'Confirmed' %}{% set status_color = 'blue' %}
+                    {% elif o.status == 'Pending' %}{% set status_color = 'yellow' %}
+                    {% endif %}
+                    <div class="order-row">
+                        <div class="order-id">#{{ '%04d' % o.id }}</div>
+                        <div class="order-product">{{ o.customer_name or 'Guest' }} — {{ o.items|length }} item(s)</div>
+                        <div class="order-amount">${{ '%.2f' % o.total }}</div>
+                        <div class="order-status status-{{ status_color }}">{{ o.status }}</div>
+                        <div class="order-fraud">Fraud: {{ '%.0f' % o.fraud_score }}%</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color:#aaa;">No orders yet — orders placed via checkout will appear here.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="feature-card">
+        <h3>🤖 AI Insights</h3>
+        <p>🛡️ <strong>Fraud Detection:</strong> Active (Random Forest)</p>
+        <p>😊 <strong>Sentiment Analysis:</strong> Active (rule-based + DL fallback)</p>
+        <p>💡 <strong>Recommendations:</strong> Active ({{ sentiments|length }} sentiment buckets tracked)</p>
+        <p>🤖 <strong>LLM Chat:</strong> Powered by Groq LLaMA 3.3</p>
+        <p>📧 <strong>Order Notifications:</strong> Sent via Replit Mail to company owner</p>
+    </div>
+</div>
+
+<style>
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+}
+.kpi-card {
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 16px;
+    padding: 22px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+}
+.kpi-card:hover { transform: translateY(-4px); border-color: #a855f7; }
+.kpi-icon { font-size: 32px; margin-bottom: 8px; }
+.kpi-value {
+    font-size: 26px; font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, #fff, #a855f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.kpi-label { color: #aaa; font-size: 13px; margin-top: 4px; }
+
+.orders-table { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+.order-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 90px 110px 110px;
+    gap: 12px; align-items: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 12px 16px; border-radius: 12px;
+    color: #ddd; font-size: 14px;
+}
+.order-id { color: #a855f7; font-weight: 600; }
+.order-amount { color: #22c55e; font-weight: 600; }
+.order-status {
+    padding: 4px 10px; border-radius: 20px; font-size: 12px;
+    text-align: center; font-weight: 600;
+}
+.status-green  { background: rgba(34,197,94,0.2); color: #22c55e; }
+.status-blue   { background: rgba(59,130,246,0.2); color: #60a5fa; }
+.status-red    { background: rgba(239,68,68,0.2);  color: #ef4444; }
+.status-yellow { background: rgba(234,179,8,0.2);  color: #facc15; }
+.status-gray   { background: rgba(156,163,175,0.2); color: #9ca3af; }
+.order-fraud { color: #888; font-size: 12px; text-align: right; }
+
+@media (max-width: 700px) {
+    .order-row {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+</style>
+{% endblock %}

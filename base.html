@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AI Sales Agent | {% block title %}Ecommerce Assistant{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Animated Background -->
+<div class="animated-bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <a class="sidebar-item" href="{{ url_for('index') }}" onclick="closeSidebar()">
+        <i class="fas fa-comment-dots"></i> <span>AI Chat</span>
+    </a>
+    <a class="sidebar-item" href="{{ url_for('products') }}" onclick="closeSidebar()">
+        <i class="fas fa-shopping-bag"></i> <span>Products</span>
+    </a>
+    <a class="sidebar-item" href="{{ url_for('cart_view') }}" onclick="closeSidebar()">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Cart {% if cart_count %}<span class="badge">{{ cart_count }}</span>{% endif %}</span>
+    </a>
+    <a class="sidebar-item" href="{{ url_for('contact') }}" onclick="closeSidebar()">
+        <i class="fas fa-envelope"></i> <span>Contact Us</span>
+    </a>
+
+    {% if current_user.is_authenticated and current_user.is_admin %}
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Admin Panel</div>
+    <a class="sidebar-item" href="{{ url_for('dashboard') }}" onclick="closeSidebar()">
+        <i class="fas fa-chart-line"></i> <span>Dashboard</span>
+    </a>
+    <a class="sidebar-item" href="{{ url_for('admin_analytics') }}" onclick="closeSidebar()">
+        <i class="fas fa-chart-pie"></i> <span>Owner Analytics</span>
+    </a>
+    <a class="sidebar-item" href="{{ url_for('admin_orders') }}" onclick="closeSidebar()">
+        <i class="fas fa-receipt"></i> <span>Manage Orders</span>
+    </a>
+    <a class="sidebar-item" href="{{ url_for('admin_products') }}" onclick="closeSidebar()">
+        <i class="fas fa-tools"></i> <span>Manage Products</span>
+    </a>
+    <a class="sidebar-item" href="{{ url_for('admin_inbox') }}" onclick="closeSidebar()">
+        <i class="fas fa-inbox"></i>
+        <span>Inbox {% if unread_inbox %}<span class="badge" style="background:#ef4444;">{{ unread_inbox }}</span>{% endif %}</span>
+    </a>
+    {% endif %}
+
+    <a class="sidebar-item" href="{{ url_for('about') }}" onclick="closeSidebar()">
+        <i class="fas fa-info-circle"></i> <span>About</span>
+    </a>
+</div>
+
+<!-- Navbar -->
+<div class="navbar">
+    <button class="menu-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    <a href="{{ url_for('index') }}" class="logo-area" style="text-decoration:none;">
+        <div class="logo-icon">AI</div>
+        <div class="logo-text">Sales Agent</div>
+    </a>
+    <div class="nav-auth">
+        <a href="{{ url_for('cart_view') }}" class="cart-link" title="Cart">
+            <i class="fas fa-shopping-cart"></i>
+            {% if cart_count %}<span class="cart-badge">{{ cart_count }}</span>{% endif %}
+        </a>
+        {% if current_user.is_authenticated %}
+            {% if current_user.profile_image_url %}
+                <img src="{{ current_user.profile_image_url }}" alt="" class="user-avatar">
+            {% endif %}
+            <span class="user-greeting">Hi, {{ current_user.display_name }}</span>
+            <a href="{{ url_for('logout') }}" class="auth-link">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="auth-link">Login</a>
+            <a href="{{ url_for('register') }}" class="auth-link register">Register</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="main-container">
+    {% block content %}{% endblock %}
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

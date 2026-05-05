@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Register - AI Sales Agent{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-header">
+            <div class="auth-logo">AI</div>
+            <h1>Create Account</h1>
+            <p>Join AI Sales Agent</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, msg in messages %}
+                        <div class="flash {{ category }}">{{ msg }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Create a password" required minlength="6">
+            </div>
+
+            <button type="submit" class="auth-btn">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+        </form>
+
+        <div class="auth-divider"><span>or continue with</span></div>
+
+        <div class="social-auth">
+            <a href="{{ url_for('google_login') }}" class="social-btn google">
+                <i class="fab fa-google"></i> Google
+            </a>
+            <a href="{{ url_for('github_login') }}" class="social-btn github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page { min-height: 100vh; display:flex; align-items:center; justify-content:center; padding:100px 20px 50px; }
+.auth-container { width:100%; max-width:420px; background:rgba(20,20,40,0.9); backdrop-filter:blur(20px); border-radius:24px; border:1px solid rgba(255,255,255,0.1); padding:40px; }
+.auth-header { text-align:center; margin-bottom:30px; }
+.auth-logo { width:70px; height:70px; background:linear-gradient(135deg,#6366f1,#a855f7); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:bold; color:white; margin:0 auto 20px; }
+.auth-header h1 { color:white; font-size:24px; margin-bottom:8px; }
+.auth-header p { color:#888; font-size:14px; }
+.form-group { margin-bottom:20px; }
+.form-group label { display:block; color:#ccc; margin-bottom:8px; font-size:14px; }
+.form-group input { width:100%; padding:14px 16px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:white; font-size:15px; transition:all 0.3s; }
+.form-group input:focus { outline:none; border-color:#6366f1; background:rgba(99,102,241,0.1); }
+.form-group input::placeholder { color:rgba(255,255,255,0.3); }
+.auth-btn { width:100%; padding:16px; background:linear-gradient(135deg,#6366f1,#a855f7); border:none; border-radius:12px; color:white; font-size:16px; font-weight:600; cursor:pointer; transition:all 0.3s; margin-top:10px; }
+.auth-btn:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(99,102,241,0.4); }
+.auth-divider { text-align:center; margin:25px 0; position:relative; }
+.auth-divider::before { content:''; position:absolute; left:0; top:50%; width:100%; height:1px; background:rgba(255,255,255,0.1); }
+.auth-divider span { background:rgba(20,20,40,0.9); padding:0 15px; color:#666; font-size:13px; position:relative; }
+.social-auth { display:flex; gap:12px; }
+.social-btn { flex:1; padding:14px; border-radius:12px; text-align:center; text-decoration:none; color:white; font-size:14px; font-weight:500; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.social-btn.google { background:#4285f4; }
+.social-btn.github { background:#333; }
+.social-btn:hover { transform:translateY(-2px); opacity:0.9; }
+.auth-footer { text-align:center; margin-top:25px; color:#666; font-size:14px; }
+.auth-footer a { color:#6366f1; text-decoration:none; }
+.auth-footer a:hover { text-decoration:underline; }
+.flash-messages { margin-bottom:18px; }
+.flash { padding:11px 14px; border-radius:10px; margin-bottom:8px; font-size:13px; }
+.flash.error { background:rgba(239,68,68,0.18); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); }
+.flash.success { background:rgba(34,197,94,0.18); color:#86efac; border:1px solid rgba(34,197,94,0.3); }
+.flash.info { background:rgba(99,102,241,0.18); color:#a5b4fc; border:1px solid rgba(99,102,241,0.3); }
+</style>
+{% endblock %}

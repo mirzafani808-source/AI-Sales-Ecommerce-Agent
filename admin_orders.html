@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Manage Orders{% endblock %}
+
+{% block extra_css %}
+<style>
+.orders-page { padding: 100px 30px 60px; max-width: 1300px; margin: 0 auto; }
+.page-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:28px; }
+.page-title { color:#fff; font-size:28px; font-weight:700; display:flex; align-items:center; gap:12px; }
+.page-title i { color:#a855f7; }
+
+.filter-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.filter-btn { padding:8px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#bbb; cursor:pointer; font-size:13px; text-decoration:none; transition:all 0.2s; }
+.filter-btn:hover, .filter-btn.active { background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border-color:transparent; }
+
+.orders-card { background:rgba(20,20,40,0.85); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.08); border-radius:18px; overflow:hidden; }
+.orders-table { width:100%; border-collapse:collapse; }
+.orders-table th { color:#888; font-size:12px; text-transform:uppercase; letter-spacing:1px; padding:14px 16px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); }
+.orders-table td { color:#ddd; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px; vertical-align:middle; }
+.orders-table tr:hover td { background:rgba(255,255,255,0.02); }
+
+.status-pill { padding:4px 12px; border-radius:99px; font-size:11px; font-weight:600; }
+.status-Confirmed  { background:rgba(34,197,94,0.18); color:#86efac; }
+.status-Shipped    { background:rgba(99,102,241,0.18); color:#a5b4fc; }
+.status-Pending    { background:rgba(234,179,8,0.18); color:#fde68a; }
+.status-Delivered  { background:rgba(20,184,166,0.18); color:#5eead4; }
+.status-Cancelled  { background:rgba(239,68,68,0.18); color:#fca5a5; }
+
+.status-form { display:flex; gap:6px; align-items:center; }
+.status-select { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:8px; padding:5px 8px; font-size:12px; cursor:pointer; }
+.status-select option { background:#1e1e3a; }
+.btn-update { padding:5px 12px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s; }
+.btn-update:hover { opacity:0.85; }
+
+.fraud-badge { padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600; }
+.fraud-low  { background:rgba(34,197,94,0.18); color:#86efac; }
+.fraud-mid  { background:rgba(234,179,8,0.18); color:#fde68a; }
+.fraud-high { background:rgba(239,68,68,0.18); color:#fca5a5; }
+
+.empty-row td { text-align:center; padding:40px; color:#666; }
+
+.pagination { display:flex; justify-content:center; align-items:center; gap:8px; padding:20px; }
+.page-link { padding:8px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#bbb; text-decoration:none; font-size:13px; transition:all 0.2s; }
+.page-link:hover, .page-link.current { background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border-color:transparent; }
+.page-link.disabled { opacity:0.3; pointer-events:none; }
+
+.flash-messages { margin-bottom:20px; }
+.flash { padding:11px 14px; border-radius:10px; margin-bottom:8px; font-size:13px; }
+.flash.error   { background:rgba(239,68,68,0.18); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); }
+.flash.success { background:rgba(34,197,94,0.18); color:#86efac; border:1px solid rgba(34,197,94,0.3); }
+.flash.info    { background:rgba(99,102,241,0.18); color:#a5b4fc; border:1px solid rgba(99,102,241,0.3); }
+
+.total-count { color:#888; font-size:14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="orders-page">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="page-header">
+        <div class="page-title">
+            <i class="fas fa-receipt"></i>
+            All Orders
+            <span class="total-count">({{ orders.total }} total)</span>
+        </div>
+        <div class="filter-bar">
+            <a href="{{ url_for('admin_orders') }}" class="filter-btn {% if not status_filter %}active{% endif %}">All</a>
+            {% for s in statuses %}
+            <a href="{{ url_for('admin_orders', status=s) }}" class="filter-btn {% if status_filter == s %}active{% endif %}">{{ s }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="orders-card">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Email</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Fraud</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if orders.items %}
+                    {% for o in orders.items %}
+                    <tr>
+                        <td><b>#{{ o.id }}</b></td>
+                        <td>{{ o.customer_name or '—' }}</td>
+                        <td style="color:#888;font-size:13px;">{{ o.customer_email or '—' }}</td>
+                        <td style="color:#a855f7;">{{ o.items|length }} item{{ 's' if o.items|length != 1 }}</td>
+                        <td style="color:#22c55e;font-weight:700;">${{ '%.2f' % o.total }}</td>
+                        <td>
+                            {% set fs = o.fraud_score or 0 %}
+                            <span class="fraud-badge {% if fs < 0.3 %}fraud-low{% elif fs < 0.7 %}fraud-mid{% else %}fraud-high{% endif %}">
+                                {{ '%.0f' % (fs * 100) }}%
+                            </span>
+                        </td>
+                        <td><span class="status-pill status-{{ o.status }}">{{ o.status }}</span></td>
+                        <td style="color:#888;font-size:12px;">{{ o.created_at.strftime('%Y-%m-%d %H:%M') if o.created_at else '—' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_update_order_status', oid=o.id) }}" class="status-form">
+                                <select name="status" class="status-select">
+                                    <option value="Pending" {% if o.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                    <option value="Confirmed" {% if o.status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                                    <option value="Shipped" {% if o.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                                    <option value="Delivered" {% if o.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                    <option value="Cancelled" {% if o.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                                <button type="submit" class="btn-update">Save</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr class="empty-row"><td colspan="9">No orders found{% if status_filter %} with status "{{ status_filter }}"{% endif %}.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        {% if orders.pages > 1 %}
+        <div class="pagination">
+            <a href="{{ url_for('admin_orders', page=orders.prev_num, status=status_filter) }}" class="page-link {% if not orders.has_prev %}disabled{% endif %}">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% for p in orders.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+                {% if p %}
+                    <a href="{{ url_for('admin_orders', page=p, status=status_filter) }}" class="page-link {% if p == orders.page %}current{% endif %}">{{ p }}</a>
+                {% else %}
+                    <span class="page-link disabled">…</span>
+                {% endif %}
+            {% endfor %}
+            <a href="{{ url_for('admin_orders', page=orders.next_num, status=status_filter) }}" class="page-link {% if not orders.has_next %}disabled{% endif %}">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

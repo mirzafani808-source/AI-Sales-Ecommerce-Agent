@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Access Denied</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="animated-bg"></div>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px;color:white;text-align:center;">
+    <div>
+        <h1 style="font-size:80px;margin-bottom:10px;">403</h1>
+        <p style="color:#aaa;margin-bottom:30px;">Authentication failed or access denied.</p>
+        <a href="/welcome" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:white;padding:12px 24px;border-radius:10px;text-decoration:none;">Try Again</a>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}About - AI Sales Agent{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <h1 class="section-title">👋 About AI Sales Agent</h1>
+    
+    <div class="about-card">
+        <h2>🤖 What is AI Sales Agent?</h2>
+        <p>An intelligent ecommerce assistant powered by Machine Learning, Deep Learning, and Large Language Models. It helps customers with their shopping queries, detects fraud, and provides personalized product recommendations.</p>
+    </div>
+    
+    <div class="about-card">
+        <h2>🛠️ Technology Stack</h2>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <span class="tech-icon">🔥</span>
+                <span>Flask</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-icon">🧠</span>
+                <span>LangChain</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-icon">⚡</span>
+                <span>Groq LLM</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-icon">📊</span>
+                <span>scikit-learn</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-icon">🧠</span>
+                <span>Transformers</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-icon">🔥</span>
+                <span>PyTorch</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="about-card">
+        <h2>📧 Contact</h2>
+        <p>Email: support@aisalesagent.com</p>
+        <p>Website: www.aisalesagent.com</p>
+    </div>
+</div>
+
+<style>
+.about-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(10px);
+}
+.about-card h2 {
+    color: #6366f1;
+    margin-bottom: 15px;
+}
+.about-card p {
+    color: #ccc;
+    line-height: 1.8;
+}
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+.tech-item {
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    color: #fff;
+}
+.tech-icon {
+    font-size: 30px;
+    display: block;
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}

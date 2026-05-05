@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Customer Inbox{% endblock %}
+
+{% block extra_css %}
+<style>
+.inbox-page { padding: 100px 30px 60px; max-width: 980px; margin: 0 auto; }
+.page-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:28px; }
+.page-title { color:#fff; font-size:28px; font-weight:700; display:flex; align-items:center; gap:12px; }
+.page-title i { color:#a855f7; }
+.unread-badge { background:rgba(239,68,68,0.2); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); padding:4px 12px; border-radius:99px; font-size:13px; font-weight:600; }
+
+.inbox-card {
+    background: rgba(20,20,40,0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.message-row {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: start;
+    transition: background 0.2s;
+}
+.message-row:last-child { border-bottom: none; }
+.message-row:hover { background: rgba(255,255,255,0.02); }
+
+.msg-meta { display:flex; align-items:center; gap:14px; margin-bottom:8px; flex-wrap:wrap; }
+.msg-name { color:#fff; font-weight:600; font-size:15px; }
+.msg-email { color:#888; font-size:13px; }
+.msg-date { color:#555; font-size:12px; margin-left:auto; }
+.msg-subject { color:#a855f7; font-size:13px; font-weight:500; margin-bottom:6px; }
+.msg-body {
+    color:#ccc;
+    font-size:14px;
+    line-height:1.6;
+    white-space:pre-wrap;
+    background: rgba(255,255,255,0.03);
+    border-radius:8px;
+    padding:12px 14px;
+    max-height:120px;
+    overflow:hidden;
+    position:relative;
+}
+.msg-body.expanded { max-height: none; }
+.expand-btn {
+    color:#6366f1; font-size:12px; cursor:pointer; background:none; border:none;
+    padding:4px 0; margin-top:4px; display:inline-flex; align-items:center; gap:4px;
+}
+.expand-btn:hover { color:#a855f7; }
+
+.msg-actions { display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+.btn-reply {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:8px 14px; border-radius:8px;
+    background:rgba(99,102,241,0.15); color:#a5b4fc;
+    border:1px solid rgba(99,102,241,0.25);
+    font-size:12px; text-decoration:none; font-weight:500; transition:all 0.2s;
+}
+.btn-reply:hover { background:rgba(99,102,241,0.3); }
+.btn-del {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:8px 14px; border-radius:8px;
+    background:rgba(239,68,68,0.1); color:#fca5a5;
+    border:1px solid rgba(239,68,68,0.2);
+    font-size:12px; cursor:pointer; font-weight:500; transition:all 0.2s;
+}
+.btn-del:hover { background:rgba(239,68,68,0.25); }
+
+.empty-inbox { text-align:center; padding:60px; color:#666; }
+.empty-inbox i { font-size:48px; color:#333; margin-bottom:16px; display:block; }
+
+.flash-messages { margin-bottom:20px; }
+.flash { padding:11px 14px; border-radius:10px; font-size:13px; margin-bottom:8px; }
+.flash.info { background:rgba(99,102,241,0.18); color:#a5b4fc; border:1px solid rgba(99,102,241,0.3); }
+
+@media(max-width:600px) {
+    .message-row { grid-template-columns: 1fr; }
+    .msg-actions { flex-direction:row; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inbox-page">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="page-header">
+        <div class="page-title">
+            <i class="fas fa-inbox"></i>
+            Customer Inbox
+            {% if unread > 0 %}
+            <span class="unread-badge">{{ unread }} new</span>
+            {% endif %}
+        </div>
+        <span style="color:#888;font-size:14px;">{{ messages|length }} message{{ 's' if messages|length != 1 }}</span>
+    </div>
+
+    <div class="inbox-card">
+        {% if messages %}
+            {% for m in messages %}
+            <div class="message-row">
+                <div>
+                    <div class="msg-meta">
+                        <span class="msg-name">{{ m.name }}</span>
+                        <span class="msg-email">{{ m.email }}</span>
+                        <span class="msg-date">{{ m.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    {% if m.subject %}
+                    <div class="msg-subject"><i class="fas fa-tag"></i> {{ m.subject }}</div>
+                    {% endif %}
+                    <div class="msg-body" id="body-{{ m.id }}">{{ m.message }}</div>
+                    <button class="expand-btn" onclick="toggleBody({{ m.id }})">
+                        <i class="fas fa-chevron-down" id="icon-{{ m.id }}"></i> <span id="lbl-{{ m.id }}">Show more</span>
+                    </button>
+                </div>
+                <div class="msg-actions">
+                    <a href="mailto:{{ m.email }}?subject=Re: {{ m.subject or 'Your message' }}" class="btn-reply">
+                        <i class="fas fa-reply"></i> Reply
+                    </a>
+                    <form method="POST" action="{{ url_for('admin_inbox_delete', mid=m.id) }}"
+                          onsubmit="return confirm('Delete this message?');">
+                        <button type="submit" class="btn-del">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-inbox">
+                <i class="fas fa-inbox"></i>
+                <p>No messages yet. Customer queries will appear here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleBody(id) {
+    const body = document.getElementById('body-' + id);
+    const icon = document.getElementById('icon-' + id);
+    const lbl  = document.getElementById('lbl-' + id);
+    body.classList.toggle('expanded');
+    if (body.classList.contains('expanded')) {
+        icon.className = 'fas fa-chevron-up';
+        lbl.textContent = 'Show less';
+    } else {
+        icon.className = 'fas fa-chevron-down';
+        lbl.textContent = 'Show more';
+    }
+}
+</script>
+{% endblock %}
